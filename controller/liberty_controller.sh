@@ -8,7 +8,7 @@ zypper mr -R --all
 zypper mr -e --all
 zypper ref
 zypper up --skip-interactive
-zypper -n in python-openstackclient
+zypper -n in --no-recommends python-openstackclient
 
 ##### Name Resolution #####
 echo "10.10.10.20 compute" >> /etc/hosts
@@ -22,8 +22,8 @@ echo "server 3.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
 systemctl enable ntpd.service
 systemctl start ntpd.service
 
-##### SQL Database #####
-zypper -n in mysql-community-server mysql-community-server-client python-PyMySQL
+##### MySQL Database Service #####
+zypper -n in --no-recommends mysql-community-server mysql-community-server-client python-PyMySQL
 cp etc/my.cnf.d/mysql_openstack.cnf /etc/my.cnf.d/mysql_openstack.cnf
 systemctl enable mysql.service
 systemctl start mysql.service
@@ -34,8 +34,8 @@ mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%';"
 mysql -e "FLUSH PRIVILEGES;"
 
 
-##### RabbitMQ #####
-zypper -n in rabbitmq-server
+##### RabbitMQ Service #####
+zypper -n in --no-recommends rabbitmq-server
 cp etc/systemd/system/epmd.socket /etc/systemd/system/epmd.socket
 systemctl enable epmd.service
 systemctl start epmd.service
@@ -44,9 +44,9 @@ systemctl start rabbitmq-server.service
 rabbitmqctl add_user openstack PASSWORD
 rabbitmqctl set_permissions openstack ".*" ".*" ".*"
 
-##### Keystone #####
+##### Keystone Identity Service #####
 mysql -u root -pPASSWORD -e "CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'PASSWORD'; GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'PASSWORD';"
-zypper -n in openstack-keystone apache2-mod_wsgi memcached python-python-memcached python-dateutil python-pyOpenSSL python-pycrypto python-repoze.who
+zypper -n in --no-recommends openstack-keystone apache2-mod_wsgi memcached python-python-memcached python-dateutil python-pyOpenSSL python-pycrypto python-repoze.who
 systemctl enable memcached.service
 systemctl start memcached.service
 cp etc/keystone/keystone.conf /etc/keystone/keystone.conf
@@ -74,7 +74,7 @@ openstack role add --project admin --user admin admin
 openstack project create --domain default --description "Service Project" service
 cp root/admin-openrc.sh /root/admin-openrc.sh
 
-##### Glance #####
+##### Glance Image Service #####
 mysql -u root -pPASSWORD -e "CREATE DATABASE glance; GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'PASSWORD'; GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY 'PASSWORD';"
 source /root/admin-openrc.sh
 openstack user create --domain default --password PASSWORD glance
@@ -83,14 +83,14 @@ openstack service create --name glance --description "OpenStack Image service" i
 openstack endpoint create --region RegionOne image public http://controller:9292
 openstack endpoint create --region RegionOne image internal http://controller:9292
 openstack endpoint create --region RegionOne image admin http://controller:9292
-zypper -n in openstack-glance python-glanceclient
+zypper -n in --no-recommends openstack-glance python-glanceclient
 cp etc/glance/glance-api.conf /etc/glance/glance-api.conf
 cp etc/glance/glance-registry.conf /etc/glance/glance-registry.conf
 chown root:glance /etc/glance/glance-api.conf /etc/glance/glance-registry.conf
 systemctl enable openstack-glance-api.service openstack-glance-registry.service
 systemctl start openstack-glance-api.service openstack-glance-registry.service
 
-##### Nova #####
+##### Nova Compute Service #####
 mysql -u root -pPASSWORD -e "CREATE DATABASE nova; GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'PASSWORD'; GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'PASSWORD';"
 source /root/admin-openrc.sh
 openstack user create --domain default --password PASSWORD nova
@@ -99,10 +99,38 @@ openstack service create --name nova --description "OpenStack Compute" compute
 openstack endpoint create --region RegionOne compute public http://controller:8774/v2/%\(tenant_id\)s
 openstack endpoint create --region RegionOne compute internal http://controller:8774/v2/%\(tenant_id\)s
 openstack endpoint create --region RegionOne compute admin http://controller:8774/v2/%\(tenant_id\)s
-zypper in http://download.opensuse.org/repositories/Cloud:/Eucalyptus/openSUSE_Leap_42.1/noarch/euca2ools-3.0.4-1.2.noarch.rpm
-zypper -n in openstack-nova-api openstack-nova-scheduler openstack-nova-cert openstack-nova-conductor openstack-nova-consoleauth openstack-nova-novncproxy python-novaclient iptables
+zypper in --no-recommends http://download.opensuse.org/repositories/Cloud:/Eucalyptus/openSUSE_Leap_42.1/noarch/euca2ools-3.0.4-1.2.noarch.rpm
+zypper -n in --no-recommends openstack-nova-api openstack-nova-scheduler openstack-nova-cert openstack-nova-conductor openstack-nova-consoleauth openstack-nova-novncproxy python-novaclient iptables
 cp etc/nova/nova.conf /etc/nova/nova.conf
 chown root:nova /etc/nova/nova.conf
 systemctl enable openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
 systemctl start openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
 
+##### Neutron Networking Service #####
+mysql -u root -pPASSWORD -e "CREATE DATABASE neutron; GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' IDENTIFIED BY 'PASSWORD'; GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' IDENTIFIED BY 'PASSWORD';"
+source admin-openrc.sh
+openstack user create --domain default --password PASSWORD neutron
+openstack role add --project service --user neutron admin
+openstack service create --name neutron --description "OpenStack Networking" network
+openstack endpoint create --region RegionOne network public http://controller:9696
+openstack endpoint create --region RegionOne network internal http://controller:9696
+openstack endpoint create --region RegionOne network admin http://controller:9696
+zypper -n in --no-recommends openstack-neutron openstack-neutron-server openstack-neutron-linuxbridge-agent openstack-neutron-l3-agent openstack-neutron-dhcp-agent openstack-neutron-metadata-agent ipset
+cp etc/neutron/neutron.conf /etc/neutron/neutron.conf
+chown root:neutron /etc/neutron/neutron.conf
+cp etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini
+cp etc/neutron/plugins/ml2/linuxbridge_agent.ini /etc/neutron/plugins/ml2/linuxbridge_agent.ini
+cp etc/neutron/dhcp_agent.ini /etc/neutron/dhcp_agent.ini
+cp etc/neutron/dnsmasq-neutron.conf /etc/neutron/dnsmasq-neutron.conf
+cp etc/neutron/metadata_agent.ini /etc/neutron/metadata_agent.ini
+systemctl enable openstack-neutron.service openstack-neutron-linuxbridge-agent.service openstack-neutron-dhcp-agent.service openstack-neutron-metadata-agent.service openstack-neutron-l3-agent.service
+systemctl start openstack-neutron.service openstack-neutron-linuxbridge-agent.service openstack-neutron-dhcp-agent.service openstack-neutron-metadata-agent.service openstack-neutron-l3-agent.service
+
+##### Horizon Dashboard #####
+zypper -n in --no-recommends openstack-dashboard
+cp etc/apache2/conf.d/openstack-dashboard.conf /etc/apache2/conf.d/openstack-dashboard.conf
+a2enmod rewrite;a2enmod ssl;a2enmod wsgi
+cp srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
+chown wwwrun:www /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
+systemctl enable apache2.service memcached.service
+systemctl restart apache2.service memcached.service
