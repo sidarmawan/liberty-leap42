@@ -27,7 +27,12 @@ zypper -n in mysql-community-server mysql-community-server-client python-PyMySQL
 cp etc/my.cnf.d/mysql_openstack.cnf /etc/my.cnf.d/mysql_openstack.cnf
 systemctl enable mysql.service
 systemctl start mysql.service
-mysql_secure_installation
+mysql -e "UPDATE mysql.user SET Password=PASSWORD('PASSWORD') WHERE User='root';"
+mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+mysql -e "DELETE FROM mysql.user WHERE User='';"
+mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\_%';"
+mysql -e "FLUSH PRIVILEGES;"
+
 
 ##### RabbitMQ #####
 zypper -n in rabbitmq-server
@@ -78,9 +83,26 @@ openstack service create --name glance --description "OpenStack Image service" i
 openstack endpoint create --region RegionOne image public http://controller:9292
 openstack endpoint create --region RegionOne image internal http://controller:9292
 openstack endpoint create --region RegionOne image admin http://controller:9292
-zypper -n install openstack-glance python-glanceclient
+zypper -n in openstack-glance python-glanceclient
 cp etc/glance/glance-api.conf /etc/glance/glance-api.conf
 cp etc/glance/glance-registry.conf /etc/glance/glance-registry.conf
 chown root:glance /etc/glance/glance-api.conf /etc/glance/glance-registry.conf
 systemctl enable openstack-glance-api.service openstack-glance-registry.service
 systemctl start openstack-glance-api.service openstack-glance-registry.service
+
+##### Nova #####
+mysql -u root -pPASSWORD -e "CREATE DATABASE nova; GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'PASSWORD'; GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'PASSWORD';"
+source /root/admin-openrc.sh
+openstack user create --domain default --password PASSWORD nova
+openstack role add --project service --user nova admin
+openstack service create --name nova --description "OpenStack Compute" compute
+openstack endpoint create --region RegionOne compute public http://controller:8774/v2/%\(tenant_id\)s
+openstack endpoint create --region RegionOne compute internal http://controller:8774/v2/%\(tenant_id\)s
+openstack endpoint create --region RegionOne compute admin http://controller:8774/v2/%\(tenant_id\)s
+zypper in http://download.opensuse.org/repositories/Cloud:/Eucalyptus/openSUSE_Leap_42.1/noarch/euca2ools-3.0.4-1.2.noarch.rpm
+zypper -n in openstack-nova-api openstack-nova-scheduler openstack-nova-cert openstack-nova-conductor openstack-nova-consoleauth openstack-nova-novncproxy python-novaclient iptables
+cp etc/nova/nova.conf /etc/nova/nova.conf
+chown root:nova /etc/nova/nova.conf
+systemctl enable openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
+systemctl start openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
+
