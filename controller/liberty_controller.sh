@@ -72,6 +72,7 @@ openstack user create --domain default --password PASSWORD admin
 openstack role create admin
 openstack role add --project admin --user admin admin
 openstack project create --domain default --description "Service Project" service
+openstack role create user
 cp root/admin-openrc.sh /root/admin-openrc.sh
 
 ##### Glance Image Service #####
@@ -115,7 +116,7 @@ openstack service create --name neutron --description "OpenStack Networking" net
 openstack endpoint create --region RegionOne network public http://controller:9696
 openstack endpoint create --region RegionOne network internal http://controller:9696
 openstack endpoint create --region RegionOne network admin http://controller:9696
-zypper -n in --no-recommends openstack-neutron openstack-neutron-server openstack-neutron-linuxbridge-agent openstack-neutron-l3-agent openstack-neutron-dhcp-agent openstack-neutron-metadata-agent ipset
+zypper -n in --no-recommends openstack-neutron openstack-neutron-server openstack-neutron-linuxbridge-agent openstack-neutron-l3-agent openstack-neutron-dhcp-agent openstack-neutron-metadata-agent ipset bridge-utils
 cp etc/neutron/neutron.conf /etc/neutron/neutron.conf
 chown root:neutron /etc/neutron/neutron.conf
 cp etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini
