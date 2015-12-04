@@ -219,3 +219,26 @@ neutron floatingip-create net-public
 nova floating-ip-associate cirros 172.16.10.199
 nova list
 
+
+##### Cinder Block Storage Service #####
+mysql -u root -pPASSWORD -e "CREATE DATABASE cinder; GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' IDENTIFIED BY 'PASSWORD';
+GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'%' IDENTIFIED BY 'PASSWORD';"
+source /root/admin-openrc.sh
+openstack user create --domain default --password PASSWORD cinder
+openstack role add --project service --user cinder admin
+openstack service create --name cinder --description "OpenStack Block Storage" volume
+openstack service create --name cinderv2 --description "OpenStack Block Storage" volumev2
+openstack endpoint create --region RegionOne volume public http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region RegionOne volume internal http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region RegionOne volume admin http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region RegionOne volumev2 public http://controller:8776/v2/%\(tenant_id\)s
+openstack endpoint create --region RegionOne volumev2 internal http://controller:8776/v2/%\(tenant_id\)s
+openstack endpoint create --region RegionOne volumev2 admin http://controller:8776/v2/%\(tenant_id\)s
+zypper -n in --no-recommends openstack-cinder-api openstack-cinder-scheduler python-cinderclient
+cp /etc/cinder/cinder.conf /etc/cinder/cinder.conf.orig
+cp etc/cinder/cinder.conf /etc/cinder/cinder.conf
+chown root:cinder /etc/cinder/cinder.conf
+su -s /bin/sh -c "cinder-manage db sync" cinder
+systemctl enable openstack-cinder-api.service openstack-cinder-scheduler.service
+systemctl start openstack-cinder-api.service openstack-cinder-scheduler.service
+cinder service-list
