@@ -1,5 +1,5 @@
-##### Copy controller config directory to /root and change current directory to controller #####
-cd /root/controller
+##### Copy compute config directory to /root and execute all commands inside compute directory #####
+cd /root/compute
 
 ##### IP Address #####
 yast2

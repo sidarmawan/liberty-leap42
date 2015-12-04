@@ -1,4 +1,4 @@
-##### Copy controller config directory to /root and change current directory to controller #####
+##### Copy controller config directory to /root and execute all commands inside controller directory #####
 cd /root/controller
 
 ##### IP Address #####

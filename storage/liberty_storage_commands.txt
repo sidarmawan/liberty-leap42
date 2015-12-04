@@ -1,0 +1,31 @@
+##### Copy storage config directory to /root and execute all commands inside storage directory #####
+cd /root/storage
+
+##### IP Address #####
+yast2
+
+##### Name Resolution #####
+echo "10.10.10.10 controller" >> /etc/hosts
+echo "10.10.10.20 compute" >> /etc/hosts
+reboot
+
+##### NTP Service #####
+echo "server 0.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 1.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 2.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 3.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+systemctl enable ntpd.service
+systemctl start ntpd.service
+
+##### Repositories #####
+zypper -n rm iproute2
+zypper in --no-recommends http://download.opensuse.org/update/13.2/x86_64/iproute2-3.16-2.7.1.x86_64.rpm
+zypper al iproute2
+zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
+zypper mr -R --all
+zypper mr -e --all
+zypper --gpg-auto-import-keys ref
+zypper -n up --skip-interactive && zypper -n dist-upgrade
+reboot
+
+zypper -n in --no-recommends python-openstackclient
