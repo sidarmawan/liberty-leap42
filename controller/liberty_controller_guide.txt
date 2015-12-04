@@ -1,12 +1,15 @@
 #!/bin/bash
 
+##### Copy controller config directory to /root and change current directory to controller #####
+cd /root/controller
+
 ##### IP Address #####
-cp etc/sysconfig/network/ifcfg-eth0 /etc/sysconfig/network/ifcfg-eth0
-cp etc/sysconfig/network/ifcfg-eth1 /etc/sysconfig/network/ifcfg-eth1
+yast2
 
 ##### Name Resolution #####
 echo "10.10.10.20 compute" >> /etc/hosts
 echo "10.10.10.30 storage" >> /etc/hosts
+reboot
 
 ##### NTP Service #####
 echo "server 0.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
@@ -17,7 +20,9 @@ systemctl enable ntpd.service
 systemctl start ntpd.service
 
 ##### Repositories #####
-zypper rm patterns-openSUSE-minimal_base-conflicts
+zypper -n rm iproute2
+zypper in --no-recommends http://download.opensuse.org/update/13.2/x86_64/iproute2-3.16-2.7.1.x86_64.rpm
+zypper al iproute2
 zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
 zypper mr -R --all
 zypper mr -e --all
@@ -27,9 +32,6 @@ reboot
 
 zypper -n in --no-recommends python-openstackclient
 zypper in --no-recommends http://download.opensuse.org/repositories/Cloud:/Eucalyptus/openSUSE_Leap_42.1/noarch/euca2ools-3.0.4-1.2.noarch.rpm
-
-##### Copy controller config directory to /root and change current directory to controller #####
-cd /root/controller
 
 ##### MySQL Database Service #####
 zypper -n in --no-recommends mysql-community-server mysql-community-server-client python-PyMySQL
@@ -44,6 +46,7 @@ mysql -e "FLUSH PRIVILEGES;"
 
 ##### RabbitMQ Service #####
 zypper -n in --no-recommends rabbitmq-server
+cp /etc/systemd/system/epmd.socket /etc/systemd/system/epmd.socket.orig
 cp etc/systemd/system/epmd.socket /etc/systemd/system/epmd.socket
 systemctl enable epmd.service
 systemctl restart epmd.service
@@ -58,8 +61,10 @@ mysql -u root -pPASSWORD -e "CREATE DATABASE keystone; GRANT ALL PRIVILEGES ON k
 zypper -n in --no-recommends openstack-keystone apache2-mod_wsgi memcached python-python-memcached python-dateutil python-pyOpenSSL python-pycrypto python-repoze.who
 systemctl enable memcached.service
 systemctl start memcached.service
+cp /etc/keystone/keystone.conf /etc/keystone/keystone.conf.orig
 cp etc/keystone/keystone.conf /etc/keystone/keystone.conf
 su -s /bin/sh -c "keystone-manage db_sync" keystone
+cp /etc/sysconfig/apache2 /etc/sysconfig/apache2.orig
 cp etc/sysconfig/apache2 /etc/sysconfig/apache2
 cp etc/apache2/conf.d/wsgi-keystone.conf /etc/apache2/conf.d/wsgi-keystone.conf
 chown -R keystone:keystone /etc/keystone
@@ -96,7 +101,9 @@ openstack endpoint create --region RegionOne image public http://controller:9292
 openstack endpoint create --region RegionOne image internal http://controller:9292
 openstack endpoint create --region RegionOne image admin http://controller:9292
 zypper -n in --no-recommends openstack-glance python-glanceclient
+cp /etc/glance/glance-api.conf /etc/glance/glance-api.conf.orig
 cp etc/glance/glance-api.conf /etc/glance/glance-api.conf
+cp /etc/glance/glance-registry.conf /etc/glance/glance-registry.conf.orig
 cp etc/glance/glance-registry.conf /etc/glance/glance-registry.conf
 chown root:glance /etc/glance/glance-api.conf /etc/glance/glance-registry.conf
 systemctl enable openstack-glance-api.service openstack-glance-registry.service
@@ -113,6 +120,7 @@ openstack endpoint create --region RegionOne compute public http://controller:87
 openstack endpoint create --region RegionOne compute internal http://controller:8774/v2/%\(tenant_id\)s
 openstack endpoint create --region RegionOne compute admin http://controller:8774/v2/%\(tenant_id\)s
 zypper -n in --no-recommends openstack-nova-api openstack-nova-scheduler openstack-nova-cert openstack-nova-conductor openstack-nova-consoleauth openstack-nova-novncproxy python-novaclient iptables
+cp /etc/nova/nova.conf /etc/nova/nova.conf.orig
 cp etc/nova/nova.conf /etc/nova/nova.conf
 chown root:nova /etc/nova/nova.conf
 systemctl enable openstack-nova-api.service openstack-nova-cert.service openstack-nova-consoleauth.service openstack-nova-scheduler.service openstack-nova-conductor.service openstack-nova-novncproxy.service
@@ -131,22 +139,85 @@ openstack endpoint create --region RegionOne network public http://controller:96
 openstack endpoint create --region RegionOne network internal http://controller:9696
 openstack endpoint create --region RegionOne network admin http://controller:9696
 zypper -n in --no-recommends openstack-neutron openstack-neutron-server openstack-neutron-linuxbridge-agent openstack-neutron-l3-agent openstack-neutron-dhcp-agent openstack-neutron-metadata-agent ipset bridge-utils
+cp /etc/neutron/neutron.conf /etc/neutron/neutron.conf.orig
 cp etc/neutron/neutron.conf /etc/neutron/neutron.conf
 chown root:neutron /etc/neutron/neutron.conf
+cp /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini.orig
 cp etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugins/ml2/ml2_conf.ini
+cp /etc/neutron/plugins/ml2/linuxbridge_agent.ini /etc/neutron/plugins/ml2/linuxbridge_agent.ini.orig
 cp etc/neutron/plugins/ml2/linuxbridge_agent.ini /etc/neutron/plugins/ml2/linuxbridge_agent.ini
+cp /etc/neutron/dhcp_agent.ini /etc/neutron/dhcp_agent.ini.orig
 cp etc/neutron/dhcp_agent.ini /etc/neutron/dhcp_agent.ini
 cp etc/neutron/dnsmasq-neutron.conf /etc/neutron/dnsmasq-neutron.conf
+cp /etc/neutron/metadata_agent.ini /etc/neutron/metadata_agent.ini.orig
 cp etc/neutron/metadata_agent.ini /etc/neutron/metadata_agent.ini
 systemctl enable openstack-neutron.service openstack-neutron-linuxbridge-agent.service openstack-neutron-dhcp-agent.service openstack-neutron-metadata-agent.service openstack-neutron-l3-agent.service
 systemctl start openstack-neutron.service openstack-neutron-linuxbridge-agent.service openstack-neutron-dhcp-agent.service openstack-neutron-metadata-agent.service openstack-neutron-l3-agent.service
+neutron ext-list
+neutron agent-list
 
 ##### Horizon Dashboard #####
 zypper -n in --no-recommends openstack-dashboard
-cp etc/apache2/conf.d/openstack-dashboard.conf /etc/apache2/conf.d/openstack-dashboard.conf
+cp /etc/apache2/conf.d/openstack-dashboard.conf.sample /etc/apache2/conf.d/openstack-dashboard.conf
 a2enmod rewrite;a2enmod ssl;a2enmod wsgi
+cp /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py.orig
 cp srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
 chown wwwrun:www /srv/www/openstack-dashboard/openstack_dashboard/local/local_settings.py
 systemctl enable apache2.service memcached.service
 systemctl restart apache2.service memcached.service
+
+##### Launch Instance Using CLI #####
+
+#0 Login as admin with password PASSWORD
+source /root/admin-openrc.sh
+
+#1 Create images
+wget http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+glance image-create --name "cirros-0.3.4-x86_64" --file cirros-0.3.4-x86_64-disk.img --disk-format qcow2 --container-format bare --visibility public --progress
+
+#2 Create public network
+neutron net-create net-public --shared --provider:physical_network public --provider:network_type flat --router:external
+
+#3 Create public subnet
+neutron subnet-create net-public 172.16.10.0/24 --name subnet-public --allocation-pool start=172.16.10.100,end=172.16.10.199 --dns-nameserver 8.8.8.8 --gateway 172.16.10.254
+
+#4 Create project
+openstack project create --domain default --description "openSUSE Project" opensuse
+
+#5 Create user
+openstack user create --domain default --password PASSWORD utian
+openstack role add --project opensuse --user utian user
+
+#7 Login as user
+source /root/utian-openrc.sh
+
+#8 Add SSH key
+nova keypair-add --pub-key .ssh/id_rsa.pub utian
+nova keypair-list
+
+#9 Add security group rules
+nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0
+nova secgroup-add-rule default tcp 22 22 0.0.0.0/0
+
+#10 Create private network
+neutron net-create net-private
+
+#11 Create private subnet
+neutron subnet-create net-private 192.168.10.0/24 --name subnet-private --dns-nameserver 8.8.8.8 --gateway 192.168.10.254
+
+#12 Create router
+neutron router-create opensuse-router
+neutron router-gateway-set opensuse-router net-public
+neutron router-interface-add opensuse-router subnet-private
+
+#13 Launch instance
+neutron net-list
+nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64 --nic net-id=PRIVATE_NET_ID --security-group default --key-name key-utian cirros
+nova list
+nova get-vnc-console cirros novnc
+
+#14 Floating IP address
+neutron floatingip-create net-public
+nova floating-ip-associate cirros 172.16.10.199
+nova list
 
