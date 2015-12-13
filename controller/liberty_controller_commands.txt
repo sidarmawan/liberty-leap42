@@ -1,12 +1,14 @@
 ##### Copy controller config directory to /root and execute all commands inside controller directory #####
 cd /root/controller
 
-##### IP Address #####
+##### IP Address, Gateway, DNS Resolver & Hostname #####
 yast2
 
 ##### Name Resolution #####
 echo "10.10.10.20 compute" >> /etc/hosts
-echo "10.10.10.30 storage" >> /etc/hosts
+echo "10.10.10.30 block" >> /etc/hosts
+echo "10.10.10.40 object0" >> /etc/hosts
+echo "10.10.10.41 object1" >> /etc/hosts
 reboot
 
 ##### NTP Service #####
