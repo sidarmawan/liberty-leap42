@@ -1,7 +1,7 @@
 ##### Copy compute config directory to /root and execute all commands inside compute directory #####
 cd /root/compute
 
-##### IP Address #####
+##### IP Address, Gateway, DNS Resolver & Hostname #####
 yast2
 
 ##### Name Resolution #####
@@ -26,8 +26,7 @@ zypper al iproute2
 zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
 zypper mr -R --all
 zypper mr -e --all
-zypper --gpg-auto-import-keys ref
-zypper -n up --skip-interactive && zypper -n dist-upgrade
+zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
 reboot
 
 zypper -n in --no-recommends python-openstackclient
