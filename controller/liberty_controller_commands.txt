@@ -1,4 +1,4 @@
-##### Copy controller config directory to /root and execute all commands inside controller directory ######
+##### Copy controller config directory to /root and execute all commands inside controller directory #####
 cd /root/controller
 
 ##### IP Address, Gateway, DNS Resolver & Hostname #####
