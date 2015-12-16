@@ -1,4 +1,4 @@
-##### Copy compute config directory to /root and execute all commands inside compute directory #####
+##### Copy compute config directory to /root and execute all commands inside compute directory ######
 cd /root/compute
 
 ##### IP Address, Gateway, DNS Resolver & Hostname #####
