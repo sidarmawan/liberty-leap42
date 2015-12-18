@@ -24,13 +24,10 @@ zypper -n rm iproute2
 zypper in --no-recommends http://download.opensuse.org/update/13.2/x86_64/iproute2-3.16-2.7.1.x86_64.rpm
 zypper al iproute2
 zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
-zypper mr -R --all
-zypper mr -e --all
+zypper mr -era
 zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
 reboot
-
 zypper -n in --no-recommends python-openstackclient
-zypper in --no-recommends http://download.opensuse.org/repositories/Cloud:/Eucalyptus/openSUSE_Leap_42.1/noarch/euca2ools-3.0.4-1.2.noarch.rpm
 
 ##### MySQL Database Service #####
 zypper -n in --no-recommends mysql-community-server mysql-community-server-client python-PyMySQL
@@ -212,7 +209,7 @@ neutron router-interface-add opensuse-router subnet-private
 
 #13 Launch instance
 neutron net-list
-nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64 --nic net-id=PRIVATE_NET_ID --security-group default --key-name key-utian cirros
+nova boot --flavor m1.tiny --image cirros-0.3.4-x86_64 --nic net-id=net-private --security-group default --key-name key-utian cirros
 nova list
 nova get-vnc-console cirros novnc
 

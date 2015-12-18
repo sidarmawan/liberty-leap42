@@ -121,6 +121,7 @@ SECRET_KEY = secret_key.generate_or_read_from_file(
 #    }
 #}
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 CACHES = {
     'default': {
          'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
