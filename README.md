@@ -7,7 +7,7 @@ __Main Reference:__
 
 __Minimum requirements:__
 - Desktop/laptop with 2 cores 64bit processor and 8 GB RAM.
-- 3 VirtualBox guests of openSUSE Leap 42.1 minimal installation. Node controller: 2 core CPU, 2 GB RAM, 8 GB HDD. Node compute: 2 core CPU, 2 GB RAM, 8 GB HDD. Node storage: 1 core CPU, 1 GB RAM, 2 x 8 GB HDD.
+- 5 VirtualBox guests of openSUSE Leap 42.1 minimal installation. Node controller: 2 core CPU, 2 GB RAM, 8 GB HDD. Node compute: 2 core CPU, 2 GB RAM, 8 GB HDD. Node block/object0/object1: 1 core CPU, 1 GB RAM, 2 x 8 GB HDD.
 
 __Topology:__
 ![alt tag](https://github.com/utianayuba/liberty_leap42.1/raw/master/topology/topology.png)
