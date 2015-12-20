@@ -1,0 +1,43 @@
+##### Copy block config directory to /root and execute all commands inside block directory #####
+cd /root/block
+
+##### IP Address, Gateway, DNS Resolver & Hostname #####
+yast2
+
+##### Name Resolution #####
+echo "10.10.10.10 controller" >> /etc/hosts
+echo "10.10.10.20 compute" >> /etc/hosts
+echo "10.10.10.40 object0" >> /etc/hosts
+echo "10.10.10.41 object1" >> /etc/hosts
+reboot
+
+##### NTP Service #####
+echo "server 0.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 1.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 2.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 3.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+systemctl enable ntpd.service
+systemctl start ntpd.service
+
+##### Repositories #####
+zypper -n rm iproute2
+zypper in --no-recommends http://download.opensuse.org/update/13.2/x86_64/iproute2-3.16-2.7.1.x86_64.rpm
+zypper al iproute2
+zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
+zypper mr -era
+zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
+reboot
+zypper -n in --no-recommends python-openstackclient
+
+##### Cinder Block Storage Service #####
+zypper -n in --no-recommends lvm2 qemu
+pvcreate /dev/sdb
+vgcreate cinder-volumes /dev/sdb
+cp /etc/lvm/lvm.conf /etc/lvm/lvm.conf.orig
+cp etc/lvm/lvm.conf /etc/lvm/lvm.conf
+zypper -n in --no-recommends openstack-cinder-volume tgt python-PyMySQL
+cp /etc/cinder/cinder.conf /etc/cinder/cinder.conf.orig
+cp etc/cinder/cinder.conf /etc/cinder/cinder.conf
+chown root:cinder /etc/cinder/cinder.conf
+systemctl enable openstack-cinder-volume.service tgtd.service
+systemctl start openstack-cinder-volume.service tgtd.service
