@@ -26,8 +26,8 @@ zypper al iproute2
 zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
 zypper mr -era
 zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
-reboot
 zypper -n in --no-recommends python-openstackclient
+reboot
 
 ##### Nova Compute Service #####
 zypper -n in --no-recommends openstack-nova-compute genisoimage qemu-kvm libvirt

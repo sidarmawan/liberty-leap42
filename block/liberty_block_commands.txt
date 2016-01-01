@@ -26,8 +26,8 @@ zypper al iproute2
 zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
 zypper mr -era
 zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
-reboot
 zypper -n in --no-recommends python-openstackclient
+reboot
 
 ##### Cinder Block Storage Service #####
 zypper -n in --no-recommends lvm2 qemu
@@ -39,5 +39,7 @@ zypper -n in --no-recommends openstack-cinder-volume tgt python-PyMySQL
 cp /etc/cinder/cinder.conf /etc/cinder/cinder.conf.orig
 cp etc/cinder/cinder.conf /etc/cinder/cinder.conf
 chown root:cinder /etc/cinder/cinder.conf
+cp /etc/tgt/targets.conf /etc/tgt/targets.conf.orig
+cp etc/tgt/targets.conf /etc/tgt/targets.conf
 systemctl enable openstack-cinder-volume.service tgtd.service
 systemctl start openstack-cinder-volume.service tgtd.service
