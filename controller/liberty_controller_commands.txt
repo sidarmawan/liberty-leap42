@@ -271,6 +271,7 @@ systemctl start openstack-heat-api.service openstack-heat-api-cfn.service openst
 
 source /root/admin-openrc.sh
 heat service-list
+cp root/heat_template.yml /root/heat_template.yml
 cat /root/heat_template.yml
 neutron net-list
 export NET_ID=$(neutron net-list | awk '/ net-private / { print $2 }')
