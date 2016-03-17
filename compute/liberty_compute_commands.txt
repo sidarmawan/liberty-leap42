@@ -35,7 +35,6 @@ cp /etc/nova/nova.conf /etc/nova/nova.conf.orig
 cp etc/nova/nova.conf /etc/nova/nova.conf
 chown root:nova /etc/nova/nova.conf
 modprobe nbd
-cp /etc/modules-load.d/nbd.conf /etc/modules-load.d/nbd.conf.orig
 cp etc/modules-load.d/nbd.conf /etc/modules-load.d/nbd.conf
 systemctl enable libvirtd.service openstack-nova-compute.service
 systemctl start libvirtd.service openstack-nova-compute.service
