@@ -280,3 +280,37 @@ heat output-show --all stack
 nova list
 heat stack-delete stack
 
+
+##### Ceilometer Telemetry Service #####
+zypper ar -f obs://server:database/openSUSE_Leap_42.1 Database
+zypper -n in --no-recommends mongodb
+cp /etc/mongodb.conf /etc/mongodb.conf.orig
+cp etc/mongodb.conf /etc/mongodb.conf
+systemctl enable mongodb.service
+systemctl start mongodb.service
+mongo --host localhost --eval 'db = db.getSiblingDB("ceilometer"); db.addUser({user: "ceilometer", pwd: "PASSWORD", roles: [ "readWrite", "dbAdmin" ]})'
+source /root/admin-openrc.sh
+openstack user create --domain default --password PASSWORD ceilometer
+openstack role add --project service --user ceilometer admin
+openstack service create --name ceilometer --description "Telemetry" metering
+openstack endpoint create --region RegionOne metering public http://controller:8777
+openstack endpoint create --region RegionOne metering internal http://controller:8777
+openstack endpoint create --region RegionOne metering admin http://controller:8777
+zypper -n in --no-recommends openstack-ceilometer-api openstack-ceilometer-collector openstack-ceilometer-agent-notification openstack-ceilometer-agent-central python-ceilometerclient openstack-ceilometer-alarm-evaluator openstack-ceilometer-alarm-notifier
+cp /etc/ceilometer/ceilometer.conf /etc/ceilometer/ceilometer.conf.orig
+cp etc/ceilometer/ceilometer.conf /etc/ceilometer/ceilometer.conf
+chown root:ceilometer /etc/ceilometer/ceilometer.conf
+systemctl enable openstack-ceilometer-api.service openstack-ceilometer-agent-notification.service openstack-ceilometer-agent-central.service openstack-ceilometer-collector.service openstack-ceilometer-alarm-evaluator.service openstack-ceilometer-alarm-notifier.service
+systemctl start openstack-ceilometer-api.service openstack-ceilometer-agent-notification.service openstack-ceilometer-agent-central.service openstack-ceilometer-collector.service openstack-ceilometer-alarm-evaluator.service openstack-ceilometer-alarm-notifier.service
+cp etc/glance/glance-api.conf /etc/glance/glance-api.conf
+cp etc/glance/glance-registry.conf /etc/glance/glance-registry.conf
+chown root:glance /etc/glance/glance-api.conf /etc/glance/glance-registry.conf
+systemctl restart openstack-glance-api.service openstack-glance-registry.service
+
+source /root/admin-openrc.sh
+ceilometer meter-list
+IMAGE_ID=$(glance image-list | grep 'cirros' | awk '{ print $2 }')
+glance image-download $IMAGE_ID > /tmp/cirros.img
+ceilometer meter-list
+ceilometer statistics -m image.download -p 60
+rm -rf /tmp/cirros.img

@@ -49,3 +49,14 @@ cp etc/neutron/plugins/ml2/linuxbridge_agent.ini /etc/neutron/plugins/ml2/linuxb
 systemctl enable openstack-neutron-linuxbridge-agent.service
 systemctl start openstack-neutron-linuxbridge-agent.service
 
+##### Ceilometer Telemetry Service #####
+zypper -n in --no-recommends openstack-ceilometer-agent-compute
+cp /etc/ceilometer/ceilometer.conf /etc/ceilometer/ceilometer.conf.orig
+cp etc/ceilometer/ceilometer.conf /etc/ceilometer/ceilometer.conf
+chown root:ceilometer /etc/ceilometer/ceilometer.conf
+cp etc/nova/nova.conf /etc/nova/nova.conf
+chown root:nova /etc/nova/nova.conf
+systemctl enable openstack-ceilometer-agent-compute.service
+systemctl start openstack-ceilometer-agent-compute.service
+systemctl restart openstack-nova-compute.service
+
