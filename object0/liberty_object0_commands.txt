@@ -1,0 +1,65 @@
+##### Copy block config directory to /root and execute all commands inside object0 directory #####
+cd /root/object0
+
+##### IP Address, Gateway, DNS Resolver & Hostname #####
+yast2
+
+##### Name Resolution #####
+echo "10.10.10.10 controller" >> /etc/hosts
+echo "10.10.10.20 compute" >> /etc/hosts
+echo "10.10.10.30 block" >> /etc/hosts
+echo "10.10.10.41 object1" >> /etc/hosts
+reboot
+
+##### NTP Service #####
+echo "server 0.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 1.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 2.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+echo "server 3.opensuse.pool.ntp.org iburst" >> /etc/ntp.conf
+systemctl enable ntpd.service
+systemctl start ntpd.service
+
+##### Repositories #####
+zypper -n rm iproute2
+zypper -n in --no-recommends http://download.opensuse.org/update/13.2/x86_64/iproute2-3.16-2.7.1.x86_64.rpm
+zypper al iproute2
+zypper ar -f obs://Cloud:OpenStack:Liberty/openSUSE_Leap_42.1 Liberty
+zypper mr -era
+zypper --gpg-auto-import-keys ref && zypper -n up --skip-interactive
+zypper -n in --no-recommends python-openstackclient
+reboot
+
+##### Swift Object Storage #####
+zypper -n in --no-recommends xfsprogs rsync
+mkfs.xfs /dev/sdb
+mkfs.xfs /dev/sdc
+mkdir -p /srv/node/sdb
+mkdir -p /srv/node/sdc
+echo "/dev/sdb /srv/node/sdb xfs noatime,nodiratime,nobarrier,logbufs=8 0 2" >> /etc/fstab
+echo "/dev/sdc /srv/node/sdc xfs noatime,nodiratime,nobarrier,logbufs=8 0 2" >> /etc/fstab
+mount /srv/node/sdb
+mount /srv/node/sdc
+cp /etc/rsyncd.conf /etc/rsyncd.conf.orig
+cp etc/rsyncd.conf /etc/rsyncd.conf
+systemctl enable rsyncd.service
+systemctl start rsyncd.service
+zypper -n in --no-recommends openstack-swift-account openstack-swift-container openstack-swift-object python-xml
+cp /etc/swift/account-server.conf /etc/swift/account-server.conf.orig
+cp etc/swift/account-server.conf /etc/swift/account-server.conf
+cp /etc/swift/container-server.conf /etc/swift/container-server.conf.orig
+cp etc/swift/container-server.conf /etc/swift/container-server.conf
+cp /etc/swift/object-server.conf /etc/swift/object-server.conf.orig
+cp etc/swift/object-server.conf /etc/swift/object-server.conf
+chown -R swift:swift /srv/node
+mkdir -p /var/cache/swift
+chown -R root:swift /var/cache/swift
+cp /etc/swift/swift.conf /etc/swift/swift.conf.orig
+cp etc/swift/swift.conf /etc/swift/swift.conf
+chown -R root:swift /etc/swift
+systemctl enable openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service
+systemctl start openstack-swift-account.service openstack-swift-account-auditor.service openstack-swift-account-reaper.service openstack-swift-account-replicator.service
+systemctl enable openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service
+systemctl start openstack-swift-container.service openstack-swift-container-auditor.service openstack-swift-container-replicator.service openstack-swift-container-updater.service
+systemctl enable openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service
+systemctl start openstack-swift-object.service openstack-swift-object-auditor.service openstack-swift-object-replicator.service openstack-swift-object-updater.service
+
